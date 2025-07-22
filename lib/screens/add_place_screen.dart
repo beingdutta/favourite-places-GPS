@@ -1,4 +1,5 @@
 import 'package:favourite_places/providers/user_places.dart';
+import 'package:favourite_places/widgets/image_input.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -41,6 +42,8 @@ class _AddPlaceScreenState extends ConsumerState<AddPlaceScreen> {
         padding: const EdgeInsets.all(12),
         child: Column(
           children: [
+
+            // Place name field
             TextField(
               decoration: const InputDecoration(labelText: 'Title'),
               controller: titleTextEditingController,
@@ -50,6 +53,13 @@ class _AddPlaceScreenState extends ConsumerState<AddPlaceScreen> {
             // Vertical Spacing
             SizedBox(height: 10),
 
+            // Image Input Btn.
+            ImageInput(),
+
+            // Vertical Spacing
+            SizedBox(height: 10),
+
+            // Add Btn.
             ElevatedButton.icon(
               onPressed: _savePlace, 
               label: const Text('Add Place'), 
