@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:favourite_places/providers/user_places.dart';
 import 'package:favourite_places/widgets/image_input.dart';
 import 'package:flutter/material.dart';
@@ -14,6 +16,7 @@ class AddPlaceScreen extends ConsumerStatefulWidget {
 
 class _AddPlaceScreenState extends ConsumerState<AddPlaceScreen> {
   // Class Variables.
+  File? _selectedImage;
   final titleTextEditingController = TextEditingController();
 
   @override
@@ -24,14 +27,21 @@ class _AddPlaceScreenState extends ConsumerState<AddPlaceScreen> {
 
   void _savePlace() {
     final enteredTitle = titleTextEditingController.text.trim();
-
-    if (enteredTitle.isEmpty) {
+    
+    if (enteredTitle.isEmpty || _selectedImage == null) {
       return;
     }
-
     // Use the provider to add the new Place.
-    ref.read(userPlacesProvider.notifier).addPlace(enteredTitle);
+    ref.read(userPlacesProvider.notifier).addPlace(
+      enteredTitle, 
+      _selectedImage!
+    );
     Navigator.pop(context);
+  }
+
+  // Function to be passed to the Child Widget.
+  void onPickImageParentScreen(image) {
+    _selectedImage = image;
   }
 
   @override
@@ -42,7 +52,6 @@ class _AddPlaceScreenState extends ConsumerState<AddPlaceScreen> {
         padding: const EdgeInsets.all(12),
         child: Column(
           children: [
-
             // Place name field
             TextField(
               decoration: const InputDecoration(labelText: 'Title'),
@@ -54,17 +63,13 @@ class _AddPlaceScreenState extends ConsumerState<AddPlaceScreen> {
             SizedBox(height: 10),
 
             // Image Input Btn.
-            ImageInput(),
+            ImageInput(onPickImage: onPickImageParentScreen,),
 
             // Vertical Spacing
             SizedBox(height: 10),
 
             // Add Btn.
-            ElevatedButton.icon(
-              onPressed: _savePlace, 
-              label: const Text('Add Place'), 
-              icon: const Icon(Icons.add)
-            ),
+            ElevatedButton.icon(onPressed: _savePlace, label: const Text('Add Place'), icon: const Icon(Icons.add)),
           ],
         ),
       ),

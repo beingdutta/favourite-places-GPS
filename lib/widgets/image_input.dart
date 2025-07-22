@@ -3,7 +3,14 @@ import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 
 class ImageInput extends StatefulWidget {
-  const ImageInput({super.key});
+
+  // Class variable.
+  final void Function(File image) onPickImage;
+
+  const ImageInput({
+    super.key,
+    required this.onPickImage
+  });
 
   @override
   State<ImageInput> createState() => _ImageInputState();
@@ -28,7 +35,12 @@ class _ImageInputState extends State<ImageInput> {
     }
 
     // Else case
-    _selectedImage = File(pickedImage.path);
+    setState(() {
+      _selectedImage = File(pickedImage.path);
+    });
+
+    // Pass the image to the Parent Screen ('add_place_screen.dart')
+    widget.onPickImage(_selectedImage!);
   }
 
   @override
@@ -43,9 +55,14 @@ class _ImageInputState extends State<ImageInput> {
     
     // If there is an Image dont show the Text Btn.
     if (_selectedImage != null){
-      containerContent = Image.file(
-        _selectedImage!,
-        fit: BoxFit.cover,
+      containerContent = GestureDetector(
+        onTap: _takePicture,
+        child: Image.file(
+          _selectedImage!,
+          fit: BoxFit.cover,
+          width: double.infinity,
+          height: double.infinity,
+        ),
       );
     }
     return Container(
