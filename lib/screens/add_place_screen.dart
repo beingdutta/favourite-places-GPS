@@ -1,10 +1,10 @@
 import 'dart:io';
-
-import 'package:favourite_places/providers/user_places.dart';
-import 'package:favourite_places/widgets/image_input.dart';
-import 'package:favourite_places/widgets/location_input.dart';
+import 'package:favourite_places/models/place.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:favourite_places/widgets/image_input.dart';
+import 'package:favourite_places/providers/user_places.dart';
+import 'package:favourite_places/widgets/location_input.dart';
 
 class AddPlaceScreen extends ConsumerStatefulWidget {
   const AddPlaceScreen({super.key});
@@ -18,6 +18,7 @@ class AddPlaceScreen extends ConsumerStatefulWidget {
 class _AddPlaceScreenState extends ConsumerState<AddPlaceScreen> {
   // Class Variables.
   File? _selectedImage;
+  PlaceLocation? _selectedLocation;
   final titleTextEditingController = TextEditingController();
 
   @override
@@ -26,16 +27,22 @@ class _AddPlaceScreenState extends ConsumerState<AddPlaceScreen> {
     super.dispose();
   }
 
+  // Function to be passed to child widget
+  void onSelectLocation(PlaceLocation location) {
+    _selectedLocation = location; 
+  }
+
   void _savePlace() {
     final enteredTitle = titleTextEditingController.text.trim();
-    
-    if (enteredTitle.isEmpty || _selectedImage == null) {
+
+    if (enteredTitle.isEmpty || _selectedImage == null || _selectedLocation == null) {
       return;
     }
     // Use the provider to add the new Place.
     ref.read(userPlacesProvider.notifier).addPlace(
       enteredTitle, 
-      _selectedImage!
+      _selectedImage!,
+      _selectedLocation!
     );
     Navigator.pop(context);
   }
@@ -70,7 +77,7 @@ class _AddPlaceScreenState extends ConsumerState<AddPlaceScreen> {
             SizedBox(height: 10),
 
             // Location Input Btns
-            LocationInput(),  
+            LocationInput(onSelectLocation: onSelectLocation),
 
             // Vertical Spacing
             SizedBox(height: 10),

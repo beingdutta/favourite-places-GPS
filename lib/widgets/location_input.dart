@@ -1,8 +1,19 @@
+import 'dart:convert';
+import 'package:favourite_places/models/place.dart';
 import 'package:flutter/material.dart';
 import 'package:location/location.dart';
+import 'package:http/http.dart' as http;
 
 class LocationInput extends StatefulWidget {
-  const LocationInput({super.key});
+
+  // Class vars.
+  final void Function(PlaceLocation location) onSelectLocation;
+
+  // Constructor
+  const LocationInput({
+    super.key,
+    required this.onSelectLocation,
+  });
 
   @override
   State<LocationInput> createState() => _LocationInputState();
@@ -10,8 +21,29 @@ class LocationInput extends StatefulWidget {
 
 class _LocationInputState extends State<LocationInput> {
   // Class vars.
-  Location? _pickedLocation;
+  PlaceLocation? _pickedLocation;
   bool _isLoadingLocation = false;
+
+  // Dart getter function.
+  String get mapLocationSnapshot {
+    if (_pickedLocation == null) {
+      return '';
+    }
+    final lat = _pickedLocation!.latitude;
+    final long = _pickedLocation!.longitude;
+    final String apiUrl =
+        'https://maps.geoapify.com/v1/staticmap'
+        '?style=osm-bright-smooth'
+        '&width=600'
+        '&height=400'
+        '&center=lonlat:$long,$lat'
+        '&zoom=14.3497'
+        '&marker=lonlat:$long,$lat;type:awesome;color:%23bb3f73;size:x-large;icon:paw'
+        '|lonlat:$long,$lat;type:material;color:%234c905a;icon:tree;icontype:awesome'
+        '|lonlat:$long,$lat;type:material;color:%234c905a;icon:tree;icontype:awesome'
+        '&apiKey=533fc6a70ebc4cc2af0d4ca8f447f823';
+    return apiUrl;
+  }
 
   void _getCurrentLocation() async {
     Location location = Location();
@@ -42,25 +74,50 @@ class _LocationInputState extends State<LocationInput> {
     });
 
     locationData = await location.getLocation();
+    final lat = locationData.latitude;
+    final long = locationData.longitude;
 
+    if (lat == null || long == null) {
+      return;
+    }
+
+    // Make Reverse Geo Coding API Request.
+    // geocode.maps.co is used here for free.
+    final url = Uri.parse(
+      'https://geocode.maps.co/reverse?lat=$lat&lon=$long&api_key=6881121c6e318591591696vcqc46855'
+    );
+    final response = await http.get(url);
+    final responseData = json.decode(response.body);
+    final address = responseData['display_name'];
+
+    //
     setState(() {
+      _pickedLocation = PlaceLocation(latitude: lat, longitude: long, address: address);
       _isLoadingLocation = false;
     });
 
-    print('Location Latitude Determined is: ${locationData.latitude}');
-    print('Location Longitude Determined is: ${locationData.longitude}');
+    widget.onSelectLocation(_pickedLocation!);
   }
 
   @override
   Widget build(BuildContext context) {
-
+    // Default content
     Widget previewContent = Text(
       'No Location Chosen',
       textAlign: TextAlign.center,
       style: Theme.of(context).textTheme.bodyLarge!.copyWith(color: Theme.of(context).colorScheme.onSurface),
     );
 
-    if (_isLoadingLocation){
+    if (_pickedLocation != null) {
+      previewContent = Image.network(
+        mapLocationSnapshot,
+        fit: BoxFit.cover,
+        width: double.infinity,
+        height: double.infinity,
+      );
+    }
+
+    if (_isLoadingLocation) {
       previewContent = const CircularProgressIndicator();
     }
 
@@ -74,7 +131,7 @@ class _LocationInputState extends State<LocationInput> {
           decoration: BoxDecoration(
             border: Border.all(width: 1, color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.2)),
           ),
-          child: previewContent
+          child: previewContent,
         ),
 
         // A row after.
