@@ -1,19 +1,17 @@
 import 'dart:convert';
 import 'package:favourite_places/models/place.dart';
+import 'package:favourite_places/screens/map.dart';
 import 'package:flutter/material.dart';
+import 'package:latlong2/latlong.dart';
 import 'package:location/location.dart';
 import 'package:http/http.dart' as http;
 
 class LocationInput extends StatefulWidget {
-
   // Class vars.
   final void Function(PlaceLocation location) onSelectLocation;
 
   // Constructor
-  const LocationInput({
-    super.key,
-    required this.onSelectLocation,
-  });
+  const LocationInput({super.key, required this.onSelectLocation});
 
   @override
   State<LocationInput> createState() => _LocationInputState();
@@ -43,6 +41,27 @@ class _LocationInputState extends State<LocationInput> {
         '|lonlat:$long,$lat;type:material;color:%234c905a;icon:tree;icontype:awesome'
         '&apiKey=533fc6a70ebc4cc2af0d4ca8f447f823';
     return apiUrl;
+  }
+
+  void _savePlace(double latitude, double longitude) async {
+    // Generate Human Readable Address.
+    //
+    // Make Reverse Geo Coding API Request.
+    // geocode.maps.co is used here for free.
+    final url = Uri.parse(
+      'https://geocode.maps.co/reverse?lat=$latitude&lon=$longitude&api_key=6881121c6e318591591696vcqc46855',
+    );
+    final response = await http.get(url);
+    final responseData = json.decode(response.body);
+    final address = responseData['display_name'];
+
+    // Update State
+    setState(() {
+      _pickedLocation = PlaceLocation(latitude: latitude, longitude: longitude, address: address);
+      _isLoadingLocation = false;
+    });
+
+    widget.onSelectLocation(_pickedLocation!);
   }
 
   void _getCurrentLocation() async {
@@ -80,23 +99,20 @@ class _LocationInputState extends State<LocationInput> {
     if (lat == null || long == null) {
       return;
     }
+    _savePlace(lat, long);
+  }
 
-    // Make Reverse Geo Coding API Request.
-    // geocode.maps.co is used here for free.
-    final url = Uri.parse(
-      'https://geocode.maps.co/reverse?lat=$lat&lon=$long&api_key=6881121c6e318591591696vcqc46855'
-    );
-    final response = await http.get(url);
-    final responseData = json.decode(response.body);
-    final address = responseData['display_name'];
+  void _selectOnMap() async {
+    // Catch value being returned
+    // from child screen.
+    final pickedLocation = await Navigator.push<LatLng>(context, MaterialPageRoute(builder: (ctx) => MapScreen()));
 
-    //
-    setState(() {
-      _pickedLocation = PlaceLocation(latitude: lat, longitude: long, address: address);
-      _isLoadingLocation = false;
-    });
+    if (pickedLocation == null) {
+      return;
+    }
 
-    widget.onSelectLocation(_pickedLocation!);
+    // Else case.
+    _savePlace(pickedLocation.latitude, pickedLocation.longitude);
   }
 
   @override
@@ -146,11 +162,7 @@ class _LocationInputState extends State<LocationInput> {
             ),
 
             // Text Btn 2
-            TextButton.icon(
-              onPressed: () {},
-              label: const Text('Select On Map'),
-              icon: Icon(Icons.location_on_rounded),
-            ),
+            TextButton.icon(onPressed: _selectOnMap, label: const Text('Select On Map'), icon: Icon(Icons.map)),
           ],
         ),
       ],
