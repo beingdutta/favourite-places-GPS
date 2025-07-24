@@ -3,6 +3,7 @@ import 'package:latlong2/latlong.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:favourite_places/models/place.dart';
 
+
 class MapScreen extends StatefulWidget {
   // Class vars.
   final bool isSelecting;
