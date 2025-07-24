@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:favourite_places/config/configs.dart';
 import 'package:favourite_places/models/place.dart';
 import 'package:favourite_places/screens/map.dart';
 import 'package:flutter/material.dart';
@@ -29,6 +30,9 @@ class _LocationInputState extends State<LocationInput> {
     }
     final lat = _pickedLocation!.latitude;
     final long = _pickedLocation!.longitude;
+
+    // Free GroAPIfy API
+    // To Generate Free Map Snapshot Images.
     final String apiUrl =
         'https://maps.geoapify.com/v1/staticmap'
         '?style=osm-bright-smooth'
@@ -39,7 +43,7 @@ class _LocationInputState extends State<LocationInput> {
         '&marker=lonlat:$long,$lat;type:awesome;color:%23bb3f73;size:x-large;icon:paw'
         '|lonlat:$long,$lat;type:material;color:%234c905a;icon:tree;icontype:awesome'
         '|lonlat:$long,$lat;type:material;color:%234c905a;icon:tree;icontype:awesome'
-        '&apiKey=533fc6a70ebc4cc2af0d4ca8f447f823';
+        '&apiKey=$geoapifyKey';
     return apiUrl;
   }
 
@@ -49,7 +53,7 @@ class _LocationInputState extends State<LocationInput> {
     // Make Reverse Geo Coding API Request.
     // geocode.maps.co is used here for free.
     final url = Uri.parse(
-      'https://geocode.maps.co/reverse?lat=$latitude&lon=$longitude&api_key=6881121c6e318591591696vcqc46855',
+      'https://geocode.maps.co/reverse?lat=$latitude&lon=$longitude&api_key=$reverseGeocodeKey',
     );
     final response = await http.get(url);
     final responseData = json.decode(response.body);
